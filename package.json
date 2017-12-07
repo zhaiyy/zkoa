@@ -5,7 +5,8 @@
   "main": "zkoa.js",
   "dependencies": {
     "delegates": "^1.0.0",
-    "koa": "^2.4.1"
+    "koa": "^2.4.1",
+    "koa-router": "^7.3.0"
   },
   "devDependencies": {},
   "scripts": {
