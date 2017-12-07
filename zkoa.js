@@ -22,11 +22,9 @@ module.exports = class Application extends Emitter{
     };
     callback() {
         const onRequest = (request, response) => {
-           let cxt = this.createContext(request, response);
-            this.middleware.forEach((fn)=>{
-                fn(cxt).then(this.respond(cxt));
-            })
-
+           let ctx = this.createContext(request, response);
+           const fn = this.compose(ctx, this.middleware);
+            fn(ctx).then( this.respond(ctx))
         }
         return onRequest;
     };
@@ -38,18 +36,28 @@ module.exports = class Application extends Emitter{
         //console.log(cxt)
 
     };
-    compose(cxt,middleware){
-        dispatch(0);
-        if(typeof middleware !='Array') return Promise.reject(new Error('middleware must be array'));
 
-        if(middleware.length <=0) return;
-        function dispatch(n){
-            const fn = middleware[n];
-            if (typeof fn !== 'function') return Promise.reject(new Error('middleware must be a function!'));
+    compose(cxt, middleware) {
+        // if(typeof middleware !='Array') return Promise.reject(new Error('middleware must be array'));
+        return function (cxt, next) {
+            return dispatch(0);
 
-            return Promise.resolve(fn(cxt, function next () {
-                return dispatch(n + 1)
-            }))
+            function dispatch(n) {
+                let fn = middleware[n];
+                if (typeof fn !== 'function') return Promise.reject(new Error('middleware must be a function!'));
+
+                if (n == middleware.length) {
+                    fn = next;
+                }
+                try{
+                    return Promise.resolve(fn(cxt, function next() {
+                        return dispatch(n + 1)
+                    }))
+                }catch (err){
+                    return Promise.reject(err);
+                }
+
+            }
         }
     };
     respond(cxt){
